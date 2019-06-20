@@ -2,10 +2,14 @@
 // Created by matte on 20/06/2019.
 //
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 typedef struct      // Containers (stockés dans un tableau)
 {
@@ -137,11 +141,6 @@ int main(int num, char *argv[])
                 printf("init is ok!");
 
                 /* DEBUT */
-
-
-
-
-
 
                 /* FIN */
             }
