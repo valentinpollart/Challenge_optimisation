@@ -17,13 +17,14 @@ typedef struct      // Containers (stockés dans un tableau)
 
 }Cont;
 
-typedef struct        //Opérations (stockées dans un tableau)
+typedef struct _OP     //Opérations (stockées dans un tableau)
 {
-    Cont *C;     // Container (et donc numéro)
-    int ini_x;  // Position initiale du container (0 0 si exterieur)
+    Cont *C;        // Container (et donc numéro)
+    int ini_x;      // Position initiale du container (0 si exterieur)
     int ini_y;
-    int fin_x;  // Position finale du container (0 0 si exterieur)
+    int fin_x;      // Position finale du container (0 si exterieur)
     int fin_y;
+    struct _OP* next;
 }OP;
 
 typedef struct
@@ -61,15 +62,86 @@ void addContainer(Bay* bay,Cont *container,int column);
 void removeContainer(Bay* bay,int column);
 void moveContainer(Bay* bay,int initial_column,int final_column);
 int findBestColumn(Bay* bay, Cont* container);
-
-
+int initialisation(int num);
+void returnCSV(int num, OP* debut);
 
 
 
 int main(int num, char *argv[])
 {
-    int ok = 0;
+    int ok = initialisation(num);
 
+    if(ok == 3)
+    {
+        printf("init is ok!");
+        OP * opTot = (OP *) malloc(sizeof(OP));
+        OP * debut = (OP *) malloc(sizeof(OP));
+        debut->next = NULL;
+
+        /* DEBUT DES MATHS */
+
+
+
+        /* FIN DES MATHS*/
+
+        returnCSV(num, debut);
+
+    }
+
+}
+
+void addContainer(Bay* bay,Cont *container,int column){
+    bay->bay_array[column][bay->height_list[column]] = container;
+    bay->height_list[column]++;
+    bay->sum_list[column] += container->num;
+}
+
+
+void removeContainer(Bay* bay,int column){
+    bay->sum_list[column] -= bay->bay_array[column][bay->height_list[column]]->num;
+    bay->bay_array[column][bay->height_list[column]] = NULL;
+    bay->height_list[column]--;
+
+}
+
+
+void moveContainer(Bay* bay, int initial_column,int final_column){
+    bay->bay_array[final_column][bay->height_list[final_column]] = bay->bay_array[initial_column][bay->height_list[initial_column]];
+    bay->height_list[final_column]++;
+    bay->sum_list[final_column] += bay->bay_array[final_column][bay->height_list[final_column]]->num;
+    bay->sum_list[initial_column] -= bay->bay_array[initial_column][bay->height_list[initial_column]]->num;
+    bay->bay_array[initial_column][bay->height_list[initial_column]] = NULL;
+    bay->height_list[initial_column]--;
+}
+
+
+int findBestColumn(Bay* bay, Cont* container){
+    int max_sum_column = 0;
+    bool try = true;
+    for(int i = 0; i < l_baie; i++){
+        if (!bay->height_list[i]){
+            return i;
+        }
+        if (bay->sum_list[i] > max_sum_column){
+            max_sum_column = i;
+        }
+        for(int j = 0; j < bay->height_list[i]; j++){
+            try = (bay->bay_array[i][j]->num < container->num);
+        }
+        if(try){
+            return i;
+
+
+
+        }
+    }
+    return max_sum_column;
+}
+
+
+int initialisation(int num)
+{
+    int ok = 0;
 
     char *glob = "_global.csv";
     char *oper = "_operation.csv";
@@ -192,65 +264,28 @@ int main(int num, char *argv[])
         }
     }
 
+    return ok;
+}
 
 
-    if(ok == 3)
+void returnCSV(int num, OP* debut)
+{
+    char * retCSV = "_solution.csv";
+    sprintf(retCSV, "%d%s", num, retCSV);
+    FILE * ret;
+    ret = fopen(retCSV, "r");
+    if(ret != NULL)
     {
-        printf("init is ok!");
+        fprintf(ret, "FROM;TO\n");
 
-        /* DEBUT */
+        OP *temp_opX = (OP*) malloc(sizeof(OP));
+        temp_opX = debut->next;
 
-        /* FIN */
-    }
-
-}
-
-void addContainer(Bay* bay,Cont *container,int column){
-    bay->bay_array[column][bay->height_list[column]] = container;
-    bay->height_list[column]++;
-    bay->sum_list[column] += container->num;
-}
-
-
-void removeContainer(Bay* bay,int column){
-    bay->sum_list[column] -= bay->bay_array[column][bay->height_list[column]]->num;
-    bay->bay_array[column][bay->height_list[column]] = NULL;
-    bay->height_list[column]--;
-
-}
-
-
-void moveContainer(Bay* bay, int initial_column,int final_column){
-    bay->bay_array[final_column][bay->height_list[final_column]] = bay->bay_array[initial_column][bay->height_list[initial_column]];
-    bay->height_list[final_column]++;
-    bay->sum_list[final_column] += bay->bay_array[final_column][bay->height_list[final_column]]->num;
-    bay->sum_list[initial_column] -= bay->bay_array[initial_column][bay->height_list[initial_column]]->num;
-    bay->bay_array[initial_column][bay->height_list[initial_column]] = NULL;
-    bay->height_list[initial_column]--;
-}
-
-
-int findBestColumn(Bay* bay, Cont* container){
-    int max_sum_column = 0;
-    bool try = true;
-    for(int i = 0; i < l_baie; i++){
-        if (!bay->height_list[i]){
-            return i;
-        }
-        if (bay->sum_list[i] > max_sum_column){
-            max_sum_column = i;
-        }
-        for(int j = 0; j < bay->height_list[i]; j++){
-            try = (bay->bay_array[i][j]->num < container->num);
-        }
-        if(try){
-            return i;
-
-
-
+        while(temp_opX->next != NULL)
+        {
+            fprintf(ret, "%d;%d\n", temp_opX->ini_x, temp_opX->fin_x);
         }
     }
-    return max_sum_column;
+    else
+        printf("error opening %s", retCSV);
 }
-
-
