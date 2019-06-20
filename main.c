@@ -30,6 +30,24 @@ typedef struct
 
 }Bay;
 
+typedef struct _OPout//Opérations vers l'exterieur (stockées dans une liste chainee)
+{
+    Cont C;         // Container (et donc numéro)
+    int ini_x;      // Position initiale du container (0 0 si exterieur)
+    int ini_y;
+    struct _OPout * suiv;
+}OPout;
+
+typedef struct _OPin //Opérations internes (stockées dans une liste chainee)
+{
+    Cont C;         // Container (et donc numéro)
+    int ini_x;      // Position initiale du container (0 0 si exterieur)
+    int ini_y;
+    int fin_x;      // Position finale du container
+    int fin_y;
+    struct _OPin * suiv;
+}OPin;
+
 int nb_cont;
 int l_baie;
 int h_baie;
@@ -60,8 +78,73 @@ int main(int num, char *argv[])
     int op = open(glob, O_RDONLY);
     if(op != -1){}
 
-    Cont *tab_cont[l_baie][h_baie];
-    int* height_list;
+
+    /* Creation du Tableau des containers */
+    Cont* tab_cont[l_baie][h_baie];
+
+    int op = open(oper, O_RDONLY);
+    if(op != -1)
+    {
+        ok++;        // ok pour x_operation.csv
+
+        char str[20];
+        read(gl, str, sizeof(gl));
+
+        /* Parsing pour les lignes */
+        const char s[2] = "\n";
+        char * token;
+        token = strtok(str, s);
+        token = strtok(NULL, s); //selection 2e ligne
+
+        OPout * temp_opXout = (OPout*) malloc(sizeof(OPout));
+        temp_opXout = NULL;
+
+        OPin * temp_opXin = (OPin*) malloc(sizeof(OPin));
+        temp_opXin = NULL;
+
+        while(token != NULL)
+        {
+            int tempNum = 0;
+            char * tempChar = "0";
+            /* Parsing pour les ' , ' */
+            sprintf(token, "CT%d , %s", tempNum, tempChar);
+
+            if(strcmp(tempChar, "R") == 0)
+            {
+                OPout * opXout = (OPout*) malloc(sizeof(OPout));
+                opXout->C.num = tempNum;
+                if(temp_opXout != NULL)
+                    temp_opXout->suiv = opXout;
+                temp_opXout = opXout;
+            }
+            else
+            {
+                char * tempCharX = "0";
+                char * tempCharY = "0";
+                sprintf(token, "CT%d , %s , %s", tempNum, tempCharX, tempCharY);
+                OPin * opXin = (OPin*) malloc(sizeof(OPin));
+                opXin->C.num = tempNum;
+                opXin->fin_x = (int) tempCharX;
+                opXin->fin_y = (int) tempCharY;
+                if(temp_opXin != NULL)
+                    temp_opXin->suiv = opXin;
+                temp_opXin = opXin;
+            }
+
+            token = strtok(NULL, s);
+            if(ok == 3)
+            {
+                printf("init is ok!");
+
+                /* DEBUT */
+
+
+
+
+
+
+                /* FIN */
+            }
 
 }
 
@@ -89,6 +172,7 @@ void moveContainer(Bay* bay, int initial_column,int final_column){
     bay->height_list[initial_column]--;
 }
 
+
 int findBestColumn(Bay* bay, Cont* container){
     int max_sum_column = 0;
     bool try = true;
@@ -104,6 +188,9 @@ int findBestColumn(Bay* bay, Cont* container){
         }
         if(try){
             return i;
+
+
+
         }
     }
     return max_sum_column;
