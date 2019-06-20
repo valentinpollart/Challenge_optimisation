@@ -62,7 +62,7 @@ int h_baie;
 OP* op_head;
 
 
-void addContainer(Bay* bay,Cont *container,int column);
+void addContainer(Bay* bay,int container_id,int column);
 void removeContainer(Bay* bay,int column);
 void moveContainer(Bay* bay,int initial_column,int final_column);
 int findBestColumn(Bay* bay, int initial_column);
