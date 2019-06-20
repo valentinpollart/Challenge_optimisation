@@ -82,7 +82,7 @@ int main(int num, char *argv[])
 
 
 
-        /* FIN DES MATHS*/
+        /* FIN DES MATHS */
 
         returnCSV(num, debut);
 
