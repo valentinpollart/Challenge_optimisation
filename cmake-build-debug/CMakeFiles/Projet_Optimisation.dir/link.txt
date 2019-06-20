@@ -1,1 +1,3 @@
-/usr/bin/cc -g   CMakeFiles/Projet_Optimisation.dir/main.c.o  -o Projet_Optimisation 
+"C:\Program Files\JetBrains\CLion 2019.1.4\bin\cmake\win\bin\cmake.exe" -E remove -f CMakeFiles\Projet_Optimisation.dir/objects.a
+C:\MinGW\bin\ar.exe cr CMakeFiles\Projet_Optimisation.dir/objects.a @CMakeFiles\Projet_Optimisation.dir\objects1.rsp
+C:\MinGW\bin\gcc.exe -g   -Wl,--whole-archive CMakeFiles\Projet_Optimisation.dir/objects.a -Wl,--no-whole-archive  -o Projet_Optimisation.exe -Wl,--out-implib,libProjet_Optimisation.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Projet_Optimisation.dir\linklibs.rsp
