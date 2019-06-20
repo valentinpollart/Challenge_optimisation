@@ -20,7 +20,8 @@ typedef struct      // Containers (stockés dans un tableau)
 
 typedef struct _OP        //Opérations (stockées dans un tableau)
 {
-    Cont *C;     // Container (et donc numéro)
+    int container_id;     // Container (et donc numéro)
+    int type;
     int ini_x;  // Position initiale du container (0 0 si exterieur)
     int ini_y;
     int fin_x;  // Position finale du container (0 0 si exterieur)
@@ -58,9 +59,10 @@ typedef struct _OPin //Opérations internes (stockées dans une liste chainee)
 int nb_cont;
 int l_baie;
 int h_baie;
+OP* op_head;
 
-
-void addContainer(Bay* bay,Cont *container,int column);
+void init(Bay* bay);
+void addContainer(Bay* bay,int container_id,int column);
 void removeContainer(Bay* bay,int column);
 void moveContainer(Bay* bay,int initial_column,int final_column);
 int findBestColumn(Bay* bay, int initial_column);
@@ -72,147 +74,31 @@ int isContainerMoveable(int container_id, Bay* bay);
 
 int main(int num, char *argv[])
 {
-    int ok = 0;
-
-
-    char *glob = "_global.csv";
-    char *oper = "_operation.csv";
-    char *posi = "_position.csv";
-
-    sprintf(glob, "%d%s", num, glob);
-    sprintf(oper, "%d%s", num, oper);
-    sprintf(posi, "%d%s", num, posi);
-
-    int gl = open(glob, O_RDONLY);
-    if(gl != -1)
-    {
-        ok++;       // ok pour x_global.csv
-
-        char str[20];
-        read(gl, str, sizeof(gl));
-
-        /* Parsing pour les lignes */
-        const char s[2] = "\n";
-        char * token;
-        token = strtok(str, s);
-        token = strtok(NULL, s); //selection 2e ligne
-
-        /* Parsing pour les ' , ' */
-        int i = 0;
-        const char s2[3] = " , ";
-        token = strtok(str, s2);
-        while(token != NULL && i<3)
-        {
-            if(i==0)
-                nb_cont = (int) token;
-            if(i==1)
-                l_baie = (int) token;
-            if(i==2)
-                h_baie = (int) token;
-
-            token = strtok(NULL, s2);
-            i++;
+    Bay *bay;
+    int move_count = 0;
+    init(bay);
+    OP* current_op = op_head;
+    while(current_op != NULL){
+        if(current_op->type == 1){
+            addContainer(bay,current_op->container_id,findBestColumn(bay,-1));
         }
-    }
-
-
-    /* Creation du Tableau des containers */
-    Cont* tab_cont[l_baie][h_baie];
-
-
-    int po = open(posi, O_RDONLY);
-    if(po != -1)
-    {
-        ok++;        // ok pour x_position.csv
-
-        char str[20];
-        read(gl, str, sizeof(gl));
-
-        /* Parsing pour les lignes */
-        const char s[2] = "\n";
-        char *token;
-        token = strtok(str, s);
-        token = strtok(NULL, s); //selection 2e ligne
-        while (token != NULL)
-        {
-            int tempNum = 0;
-            int tempNumX = 0;
-            int tempNumY = 0;
-            /* Parsing pour les ' , ' */
-            sprintf(token, "CT%d , %d , %d", tempNum, tempNumX, tempNumY);
-
-            tab_cont[tempNumX][tempNumY]->num = tempNum;
-        }
-    }
-
-    int op = open(oper, O_RDONLY);
-    if(op != -1) {
-        ok++;        // ok pour x_operation.csv
-
-        char str[20];
-        read(op, str, sizeof(op));
-
-        /* Parsing pour les lignes */
-        const char s[2] = "\n";
-        char *token;
-        token = strtok(str, s);
-        token = strtok(NULL, s); //selection 2e ligne
-
-        OPout *temp_opXout = (OPout *) malloc(sizeof(OPout));
-        temp_opXout = NULL;
-
-        OPin *temp_opXin = (OPin *) malloc(sizeof(OPin));
-        temp_opXin = NULL;
-
-        while (token != NULL) {
-            int tempNum = 0;
-            char *tempChar = "0";
-            /* Parsing pour les ' , ' */
-            sprintf(token, "CT%d , %s", tempNum, tempChar);
-
-            if (strcmp(tempChar, "R") == 0)
-            {
-                OPout *opXout = (OPout *) malloc(sizeof(OPout));
-                opXout->C->num = tempNum;
-                if (temp_opXout != NULL)
-                    temp_opXout->suiv = opXout;
-                temp_opXout = opXout;
+        else{
+            while(!isContainerMoveable(current_op->container_id,bay)){
+                moveContainer(bay,bay->container_list[current_op->container_id]->x_position,findBestColumn(bay,bay->container_list[current_op->container_id]->x_position));
+                move_count++;
             }
-            else
-            {
-                char *tempCharX = "0";
-                char *tempCharY = "0";
-                sprintf(token, "CT%d , %s , %s", tempNum, tempCharX, tempCharY);
-                OPin *opXin = (OPin *) malloc(sizeof(OPin));
-                opXin->C->num = tempNum;
-                opXin->fin_x = (int) tempCharX;
-                opXin->fin_y = (int) tempCharY;
-                if (temp_opXin != NULL)
-                    temp_opXin->suiv = opXin;
-                temp_opXin = opXin;
-            }
-
-            token = strtok(NULL, s);
+            removeContainer(bay,bay->container_list[current_op->container_id]->x_position);
         }
+        current_op = current_op->next;
     }
-
-
-
-    if(ok == 3)
-    {
-        printf("init is ok!");
-
-        /* DEBUT */
-
-        /* FIN */
-    }
+    printf("Done : %d moves",move_count);
 
 }
 
-void addContainer(Bay* bay,Cont *container,int column){
-    bay->bay_array[column][bay->height_list[column]] = container;
+void addContainer(Bay* bay,int container_id,int column){
+    bay->bay_array[column][bay->height_list[column]] = bay->container_list[container_id];
     bay->height_list[column]++;
-    bay->sum_list[column] += container->num;
+    bay->sum_list[column] += bay->container_list[container_id];
 }
 
 
