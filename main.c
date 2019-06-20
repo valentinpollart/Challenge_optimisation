@@ -87,6 +87,8 @@ int main(int num, char *argv[])
         returnCSV(num, debut);
 
     }
+    else
+        printf("error in initialization\n");
 
 }
 
@@ -182,6 +184,8 @@ int initialisation(int num)
             i++;
         }
     }
+    else
+        printf("error opening %s\n", glob);
 
 
     /* Creation du Tableau des containers */
@@ -212,6 +216,8 @@ int initialisation(int num)
             tab_cont[tempNumX][tempNumY]->num = tempNum;
         }
     }
+    else
+        printf("error opening %s\n", posi);
 
     int op = open(oper, O_RDONLY);
     if(op != -1) {
@@ -263,6 +269,8 @@ int initialisation(int num)
             token = strtok(NULL, s);
         }
     }
+    else
+        printf("error opening %s\n", oper);
 
     return ok;
 }
@@ -287,5 +295,5 @@ void returnCSV(int num, OP* debut)
         }
     }
     else
-        printf("error opening %s", retCSV);
+        printf("error creating/opening %s\n", retCSV);
 }
