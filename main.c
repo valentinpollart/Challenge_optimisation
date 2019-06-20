@@ -12,7 +12,7 @@
 
 
 
-typedef struct     // Containers (stockés dans un tableau)
+typefdef struct     // Containers (stockés dans un tableau)
 {
     int num;        //numero du container
 }Cont;
@@ -99,10 +99,10 @@ int main(int num, char *argv[])
 
         /* Parsing pour les lignes */
         const char s[2] = "\n";
-        char * token;
+        char *token;
         token = strtok(str, s);
         token = strtok(NULL, s); //selection 2e ligne
-        while(token != NULL)
+        while (token != NULL)
         {
             int tempNum = 0;
             int tempNumX = 0;
@@ -110,8 +110,9 @@ int main(int num, char *argv[])
             /* Parsing pour les ' , ' */
             sprintf(token, "CT%d , %d , %d", tempNum, tempNumX, tempNumY);
 
-            tab_cont[tempNumX][tempNumY] =
+            tab_cont[tempNumX][tempNumY]->num = tempNum;
         }
+    }
 
 
 
@@ -128,6 +129,13 @@ int main(int num, char *argv[])
         char * token;
         token = strtok(str, s);
         token = strtok(NULL, s); //selection 2e ligne
+
+        OPout * temp_opXout = (OPout*) malloc(sizeof(OPout));
+        temp_opXout = NULL;
+
+        OPin * temp_opXin = (OPin*) malloc(sizeof(OPin));
+        temp_opXin = NULL;
+
         while(token != NULL)
         {
             int tempNum = 0;
@@ -139,11 +147,22 @@ int main(int num, char *argv[])
             {
                 OPout * opXout = (OPout*) malloc(sizeof(OPout));
                 opXout->C->num = tempNum;
+                if(temp_opXout != NULL)
+                    temp_opXout->suiv = opXout;
+                temp_opXout = opXout;
             }
             else
             {
+                char * tempCharX = "0";
+                char * tempCharY = "0";
+                sprintf(token, "CT%d , %s , %s", tempNum, tempCharX, tempCharY);
                 OPin * opXin = (OPin*) malloc(sizeof(OPin));
                 opXin->C->num = tempNum;
+                opXin->fin_x = tempCharX;
+                opXin->fin_y = tempCharY;
+                if(temp_opXin != NULL)
+                    temp_opXin->suiv = opXin;
+                temp_opXin = opXin;
             }
 
 
