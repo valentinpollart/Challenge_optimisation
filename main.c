@@ -12,7 +12,7 @@
 
 
 
-typefdef struct     // Containers (stockés dans un tableau)
+typedef struct     // Containers (stockés dans un tableau)
 {
     int num;        //numero du container
 }Cont;
@@ -86,7 +86,7 @@ int main(int num, char *argv[])
 
 
     /* Creation du Tableau des containers */
-    Cont*** tab_cont[l_baie][h_baie];
+    Cont* tab_cont[l_baie][h_baie];
 
 
     int po = open(posi, O_RDONLY);
@@ -146,7 +146,7 @@ int main(int num, char *argv[])
             if(strcmp(tempChar, "R") == 0)
             {
                 OPout * opXout = (OPout*) malloc(sizeof(OPout));
-                opXout->C->num = tempNum;
+                opXout->C.num = tempNum;
                 if(temp_opXout != NULL)
                     temp_opXout->suiv = opXout;
                 temp_opXout = opXout;
@@ -157,18 +157,31 @@ int main(int num, char *argv[])
                 char * tempCharY = "0";
                 sprintf(token, "CT%d , %s , %s", tempNum, tempCharX, tempCharY);
                 OPin * opXin = (OPin*) malloc(sizeof(OPin));
-                opXin->C->num = tempNum;
-                opXin->fin_x = tempCharX;
-                opXin->fin_y = tempCharY;
+                opXin->C.num = tempNum;
+                opXin->fin_x = (int) tempCharX;
+                opXin->fin_y = (int) tempCharY;
                 if(temp_opXin != NULL)
                     temp_opXin->suiv = opXin;
                 temp_opXin = opXin;
             }
 
-
             token = strtok(NULL, s);
         }
 
+    }
+
+    if(ok == 3)
+    {
+        printf("init is ok!");
+
+        /* DEBUT */
+
+
+
+
+
+
+        /* FIN */
     }
 
 
