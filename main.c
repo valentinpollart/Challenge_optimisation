@@ -12,7 +12,7 @@
 
 
 
-typefdef struct     // Containers (stockés dans un tableau)
+typedef struct     // Containers (stockés dans un tableau)
 {
     int num;        //numero du container
 }Cont;
