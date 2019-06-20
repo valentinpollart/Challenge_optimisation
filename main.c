@@ -2,29 +2,36 @@
 // Created by matte on 20/06/2019.
 //
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 typedef struct      // Containers (stockés dans un tableau)
 {
     int num;
-
+    int x_position;
+    int y_position;
 }Cont;
 
-typedef struct        //Opérations (stockées dans un tableau)
+typedef struct _OP        //Opérations (stockées dans un tableau)
 {
     Cont *C;     // Container (et donc numéro)
     int ini_x;  // Position initiale du container (0 0 si exterieur)
     int ini_y;
     int fin_x;  // Position finale du container (0 0 si exterieur)
     int fin_y;
+    struct _OP* next;
 }OP;
 
 typedef struct
 {
     Cont*** bay_array;
+    Cont** container_list;
     int* height_list;
     int* sum_list;
 
@@ -32,7 +39,7 @@ typedef struct
 
 typedef struct _OPout//Opérations vers l'exterieur (stockées dans une liste chainee)
 {
-    Cont C;         // Container (et donc numéro)
+    Cont *C;         // Container (et donc numéro)
     int ini_x;      // Position initiale du container (0 0 si exterieur)
     int ini_y;
     struct _OPout * suiv;
@@ -40,7 +47,7 @@ typedef struct _OPout//Opérations vers l'exterieur (stockées dans une liste ch
 
 typedef struct _OPin //Opérations internes (stockées dans une liste chainee)
 {
-    Cont C;         // Container (et donc numéro)
+    Cont *C;         // Container (et donc numéro)
     int ini_x;      // Position initiale du container (0 0 si exterieur)
     int ini_y;
     int fin_x;      // Position finale du container
@@ -56,7 +63,8 @@ int h_baie;
 void addContainer(Bay* bay,Cont *container,int column);
 void removeContainer(Bay* bay,int column);
 void moveContainer(Bay* bay,int initial_column,int final_column);
-int findBestColumn(Bay* bay, Cont* container);
+int findBestColumn(Bay* bay, int initial_column);
+int isContainerMoveable(int container_id, Bay* bay);
 
 
 
@@ -75,17 +83,10 @@ int main(int num, char *argv[])
     sprintf(oper, "%d%s", num, oper);
     sprintf(posi, "%d%s", num, posi);
 
-    int op = open(glob, O_RDONLY);
-    if(op != -1){}
-
-
-    /* Creation du Tableau des containers */
-    Cont* tab_cont[l_baie][h_baie];
-
-    int op = open(oper, O_RDONLY);
-    if(op != -1)
+    int gl = open(glob, O_RDONLY);
+    if(gl != -1)
     {
-        ok++;        // ok pour x_operation.csv
+        ok++;       // ok pour x_global.csv
 
         char str[20];
         read(gl, str, sizeof(gl));
@@ -96,55 +97,115 @@ int main(int num, char *argv[])
         token = strtok(str, s);
         token = strtok(NULL, s); //selection 2e ligne
 
-        OPout * temp_opXout = (OPout*) malloc(sizeof(OPout));
-        temp_opXout = NULL;
+        /* Parsing pour les ' , ' */
+        int i = 0;
+        const char s2[3] = " , ";
+        token = strtok(str, s2);
+        while(token != NULL && i<3)
+        {
+            if(i==0)
+                nb_cont = (int) token;
+            if(i==1)
+                l_baie = (int) token;
+            if(i==2)
+                h_baie = (int) token;
 
-        OPin * temp_opXin = (OPin*) malloc(sizeof(OPin));
-        temp_opXin = NULL;
+            token = strtok(NULL, s2);
+            i++;
+        }
+    }
 
-        while(token != NULL)
+
+    /* Creation du Tableau des containers */
+    Cont* tab_cont[l_baie][h_baie];
+
+
+    int po = open(posi, O_RDONLY);
+    if(po != -1)
+    {
+        ok++;        // ok pour x_position.csv
+
+        char str[20];
+        read(gl, str, sizeof(gl));
+
+        /* Parsing pour les lignes */
+        const char s[2] = "\n";
+        char *token;
+        token = strtok(str, s);
+        token = strtok(NULL, s); //selection 2e ligne
+        while (token != NULL)
         {
             int tempNum = 0;
-            char * tempChar = "0";
+            int tempNumX = 0;
+            int tempNumY = 0;
+            /* Parsing pour les ' , ' */
+            sprintf(token, "CT%d , %d , %d", tempNum, tempNumX, tempNumY);
+
+            tab_cont[tempNumX][tempNumY]->num = tempNum;
+        }
+    }
+
+    int op = open(oper, O_RDONLY);
+    if(op != -1) {
+        ok++;        // ok pour x_operation.csv
+
+        char str[20];
+        read(op, str, sizeof(op));
+
+        /* Parsing pour les lignes */
+        const char s[2] = "\n";
+        char *token;
+        token = strtok(str, s);
+        token = strtok(NULL, s); //selection 2e ligne
+
+        OPout *temp_opXout = (OPout *) malloc(sizeof(OPout));
+        temp_opXout = NULL;
+
+        OPin *temp_opXin = (OPin *) malloc(sizeof(OPin));
+        temp_opXin = NULL;
+
+        while (token != NULL) {
+            int tempNum = 0;
+            char *tempChar = "0";
             /* Parsing pour les ' , ' */
             sprintf(token, "CT%d , %s", tempNum, tempChar);
 
-            if(strcmp(tempChar, "R") == 0)
+            if (strcmp(tempChar, "R") == 0)
             {
-                OPout * opXout = (OPout*) malloc(sizeof(OPout));
-                opXout->C.num = tempNum;
-                if(temp_opXout != NULL)
+                OPout *opXout = (OPout *) malloc(sizeof(OPout));
+                opXout->C->num = tempNum;
+                if (temp_opXout != NULL)
                     temp_opXout->suiv = opXout;
                 temp_opXout = opXout;
             }
             else
             {
-                char * tempCharX = "0";
-                char * tempCharY = "0";
+                char *tempCharX = "0";
+                char *tempCharY = "0";
                 sprintf(token, "CT%d , %s , %s", tempNum, tempCharX, tempCharY);
-                OPin * opXin = (OPin*) malloc(sizeof(OPin));
-                opXin->C.num = tempNum;
+                OPin *opXin = (OPin *) malloc(sizeof(OPin));
+                opXin->C->num = tempNum;
                 opXin->fin_x = (int) tempCharX;
                 opXin->fin_y = (int) tempCharY;
-                if(temp_opXin != NULL)
+                if (temp_opXin != NULL)
                     temp_opXin->suiv = opXin;
                 temp_opXin = opXin;
             }
 
             token = strtok(NULL, s);
-            if(ok == 3)
-            {
-                printf("init is ok!");
-
-                /* DEBUT */
+        }
+    }
 
 
 
+    if(ok == 3)
+    {
+        printf("init is ok!");
 
+        /* DEBUT */
 
-
-                /* FIN */
-            }
+        /* FIN */
+    }
 
 }
 
@@ -173,26 +234,29 @@ void moveContainer(Bay* bay, int initial_column,int final_column){
 }
 
 
-int findBestColumn(Bay* bay, Cont* container){
+int findBestColumn(Bay* bay, int container_id){
     int max_sum_column = 0;
     bool try = true;
     for(int i = 0; i < l_baie; i++){
-        if (!bay->height_list[i]){
-            return i;
-        }
-        if (bay->sum_list[i] > max_sum_column){
-            max_sum_column = i;
-        }
-        for(int j = 0; j < bay->height_list[i]; j++){
-            try = (bay->bay_array[i][j]->num < container->num);
-        }
-        if(try){
-            return i;
+        if(bay->container_list[container_id]->x_position != i){
+            if (!bay->height_list[i]){
+                return i;
+            }
+            if (bay->sum_list[i] > max_sum_column){
+                max_sum_column = i;
+            }
+            for(int j = 0; j < bay->height_list[i]; j++){
+                try = (bay->bay_array[i][j]->num < container_id);
+            }
+            if(try){
+                return i;
 
-
-
+            }
         }
     }
     return max_sum_column;
 }
 
+int isContainerMoveable(int container_id,Bay* bay){
+    return bay->container_list[container_id]->y_position == bay->height_list[bay->container_list[container_id]->x_position];
+}
