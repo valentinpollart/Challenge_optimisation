@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         }
         else{
             while(!isContainerMoveable(current_op->container_id,bay)){
-                moveContainer(bay,bay->container_list[current_op->container_id]->x_position,findBestColumn(bay,bay->container_list[current_op->container_id]->x_position));
+                moveContainer(bay,bay->container_list[current_op->container_id]->x_position,findBestColumn(bay,current_op->container_id));
                 move_count++;
             }
             removeContainer(bay,bay->container_list[current_op->container_id]->x_position);
@@ -141,8 +141,7 @@ void addContainer(Bay* bay,int container_id,int column){
 
 void removeContainer(Bay* bay,int column){
     bay->sum_list[column] -= bay->bay_array[column][bay->height_list[column]-1]->num;
-    bay->container_list[bay->bay_array[column][bay->height_list[column]-1]->num]->x_position = -1;
-    bay->container_list[bay->bay_array[column][bay->height_list[column]-1]->num]->y_position = -1;
+    bay->container_list[bay->bay_array[column][bay->height_list[column]-1]->num] = NULL;
     bay->bay_array[column][bay->height_list[column]-1] = NULL;
     bay->height_list[column]--;
 
@@ -152,16 +151,22 @@ void removeContainer(Bay* bay,int column){
 
 void moveContainer(Bay* bay, int initial_column,int final_column){
     bay->bay_array[final_column][bay->height_list[final_column]] = (Cont*)malloc(sizeof(Cont));
+
+
     bay->bay_array[final_column][bay->height_list[final_column]]->num = bay->bay_array[initial_column][bay->height_list[initial_column]-1]->num;
     bay->bay_array[final_column][bay->height_list[final_column]]->x_position = bay->bay_array[initial_column][bay->height_list[initial_column]-1]->x_position;
     bay->bay_array[final_column][bay->height_list[final_column]]->y_position = bay->bay_array[initial_column][bay->height_list[initial_column]-1]->y_position;
-    bay->container_list[bay->bay_array[final_column][bay->height_list[final_column]-1]->num]->x_position = bay->bay_array[final_column][bay->height_list[final_column]-1]->x_position;
-    bay->container_list[bay->bay_array[final_column][bay->height_list[final_column]-1]->num]->y_position = bay->bay_array[final_column][bay->height_list[final_column]-1]->y_position;
-    bay->sum_list[final_column] += bay->bay_array[final_column][bay->height_list[final_column]-1]->num;
+
+    bay->sum_list[final_column] += bay->bay_array[final_column][bay->height_list[final_column]]->num;
+
+    bay->container_list[bay->bay_array[final_column][bay->height_list[final_column]]->num]->x_position= final_column;
+    bay->container_list[bay->bay_array[final_column][bay->height_list[final_column]]->num]->y_position= bay->height_list[final_column];
+
     bay->height_list[final_column]++;
     bay->sum_list[initial_column] -= bay->bay_array[initial_column][bay->height_list[initial_column]-1]->num;
-    bay->bay_array[initial_column][bay->height_list[initial_column]-1]->num = -1;
+    bay->bay_array[initial_column][bay->height_list[initial_column]-1] = NULL;
     bay->height_list[initial_column]--;
+
     op_move* current_op_move = op_move_head;
     if(current_op_move == NULL){
         current_op_move = (op_move*)malloc(sizeof(op_move));
@@ -191,10 +196,10 @@ int findBestColumn(Bay* bay, int container_id){
     bool try = true;
     for(int i = 0; i < l_baie; i++){
         if(bay->container_list[container_id]->x_position != i){
-            if (!bay->height_list[i]){
+            if (bay->height_list[i] == 1){
                 return i;
             }
-            if (bay->sum_list[i] < max_sum_column){
+            if (bay->sum_list[i] < max_sum_column  && bay->height_list[i] < l_baie){
                 max_sum_column = i;
             }
             for(int j = 0; j < bay->height_list[i]; j++){
@@ -213,7 +218,10 @@ int findBestColumn(Bay* bay, int container_id){
 }
 
 int isContainerMoveable(int container_id,Bay* bay){
-    return bay->container_list[container_id]->y_position == bay->height_list[bay->container_list[container_id]->x_position];
+    if(bay->container_list[container_id]->y_position == bay->height_list[bay->container_list[container_id]->x_position]-1){
+        return 1;
+    }
+    return 0;
 }
 
 int initialisation(int num, Bay* bay)
@@ -273,6 +281,7 @@ int initialisation(int num, Bay* bay)
             bay->bay_array[tempNumX-1][tempNumY-1] = (Cont*)malloc(sizeof(Cont));
             bay->bay_array[tempNumX-1][tempNumY-1]->num = tempNum-1;
             bay->container_list[tempNum-1] = (Cont*)malloc(sizeof(Cont));
+            bay->container_list[tempNum-1]->num = tempNum-1;
             bay->container_list[tempNum-1]->x_position =tempNumX-1;
             bay->container_list[tempNum-1]->y_position =tempNumY-1;
             bay->height_list[tempNumX-1]++;
@@ -299,36 +308,61 @@ int initialisation(int num, Bay* bay)
 
             /* Parsing pour les ' , ' */
             sscanf(str, "CT%d , %c", &tempNum, &tempChar);
-            current_op = (OP*)malloc(sizeof(OP));
-            current_op->container_id = tempNum-1;
-            if (strcmp(&tempChar, "R") == 0)
-            {
-//                OPout *opXout = (OPout *) malloc(sizeof(OPout));
-//                opXout->C->num = tempNum;
-//                if (temp_opXout != NULL)
-//                    temp_opXout->suiv = opXout;
-//                temp_opXout = opXout;
-                current_op->type = 0;
-            }
-            else
-            {
-//                int tempCharX = 0;
-//                int tempCharY = 0;
-//                sscanf(token, "CT%d , %s\r", &tempNum, tempChar);
-//                OPin *opXin = (OPin *) malloc(sizeof(OPin));
-//                opXin->C->num = tempNum;
-//                opXin->fin_x = tempCharX;
-//                opXin->fin_y = tempCharY;
-//                if (temp_opXin != NULL)
-//                    temp_opXin->suiv = opXin;
-//                temp_opXin = opXin;
-                current_op->type = 1;
-            }
-            if (op_head == NULL ){
+
+
+            if(current_op == NULL){
+                current_op = (OP*)malloc(sizeof(OP));
+                current_op->container_id = tempNum-1;
+                if (strcmp(&tempChar, "R") == 0){
+                    current_op->type = 0;
+                }
+                else{
+                    current_op->type = 1;
+                }
                 op_head = current_op;
             }
-            fgets(str,sizeof(str),op);
-            current_op = current_op->next;
+            else{
+                current_op->next = (OP*)malloc(sizeof(OP));
+                current_op->next->container_id = tempNum-1;
+                if (strcmp(&tempChar, "R") == 0){
+                    current_op->next->type = 0;
+                }
+                else{
+                    current_op->next->type = 1;
+                }
+                current_op = current_op->next;
+            }
+
+//            current_op = (OP*)malloc(sizeof(OP));
+//            current_op->container_id = tempNum-1;
+//            if (strcmp(&tempChar, "R") == 0)
+//            {
+////                OPout *opXout = (OPout *) malloc(sizeof(OPout));
+////                opXout->C->num = tempNum;
+////                if (temp_opXout != NULL)
+////                    temp_opXout->suiv = opXout;
+////                temp_opXout = opXout;
+//                current_op->type = 0;
+//            }
+//            else
+//            {
+////                int tempCharX = 0;
+////                int tempCharY = 0;
+////                sscanf(token, "CT%d , %s\r", &tempNum, tempChar);
+////                OPin *opXin = (OPin *) malloc(sizeof(OPin));
+////                opXin->C->num = tempNum;
+////                opXin->fin_x = tempCharX;
+////                opXin->fin_y = tempCharY;
+////                if (temp_opXin != NULL)
+////                    temp_opXin->suiv = opXin;
+////                temp_opXin = opXin;
+//                current_op->type = 1;
+//            }
+//            if (op_head == NULL ){
+//                op_head = current_op;
+//            }
+//            fgets(str,sizeof(str),op);
+//            current_op = current_op->next;
         }
     }
     else
