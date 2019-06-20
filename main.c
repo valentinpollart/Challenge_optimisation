@@ -14,25 +14,23 @@
 
 typefdef struct     // Containers (stockés dans un tableau)
 {
-    int num;
+    int num;        //numero du container
 }Cont;
 
-typedef struct OPout      //Opérations (stockées dans une liste chainee)
+typedef struct OPout//Opérations vers l'exterieur (stockées dans une liste chainee)
 {
-    Cont C;     // Container (et donc numéro)
-    int ini_x;  // Position initiale du container (0 0 si exterieur)
+    Cont C;         // Container (et donc numéro)
+    int ini_x;      // Position initiale du container (0 0 si exterieur)
     int ini_y;
-    int fin_x;  // Position finale du container (0 0 si exterieur)
-    int fin_y;
     OPout * suiv;
 }OPout;
 
-typedef struct OPin       //Opérations (stockées dans une liste chainee)
+typedef struct OPin //Opérations internes (stockées dans une liste chainee)
 {
-    Cont C;     // Container (et donc numéro)
-    int ini_x;  // Position initiale du container (0 0 si exterieur)
+    Cont C;         // Container (et donc numéro)
+    int ini_x;      // Position initiale du container (0 0 si exterieur)
     int ini_y;
-    int fin_x;  // Position finale du container (0 0 si exterieur)
+    int fin_x;      // Position finale du container
     int fin_y;
     OPin * suiv;
 }OPin;
@@ -51,13 +49,13 @@ int main(int num, char *argv[])
     char * posi = "_position.csv";
 
     sprintf(glob, "%d%s", num, glob);
-    sprintf(oper, "%d%s", num, oper);
     sprintf(posi, "%d%s", num, posi);
+    sprintf(oper, "%d%s", num, oper);
 
     int gl = open(glob, O_RDONLY);
     if(gl != -1)
     {
-        ok++; // ok pour x_global.csv
+        ok++;       // ok pour x_global.csv
 
         char str[20];
         read(gl, str, sizeof(gl));
@@ -91,10 +89,10 @@ int main(int num, char *argv[])
     Cont*** tab_cont[l_baie][h_baie];
 
 
-    int op = open(oper, O_RDONLY);
-    if(op != -1)
+    int po = open(posi, O_RDONLY);
+    if(po != -1)
     {
-        ok++; // ok pour x_operation.csv
+        ok++;        // ok pour x_position.csv
 
         char str[20];
         read(gl, str, sizeof(gl));
@@ -107,12 +105,47 @@ int main(int num, char *argv[])
         while(token != NULL)
         {
             int tempNum = 0;
-            char tempChar = "0";
+            int tempNumX = 0;
+            int tempNumY = 0;
             /* Parsing pour les ' , ' */
-            fscanf(gl, "CT%d , %c", tempNum, tempChar);
+            sprintf(token, "CT%d , %d , %d", tempNum, tempNumX, tempNumY);
 
-            if(strcmp())
-                OPout * opX = (OPout*) malloc(sizeof(OPout));
+            tab_cont[tempNumX][tempNumY] =
+        }
+
+
+
+    int op = open(oper, O_RDONLY);
+    if(op != -1)
+    {
+        ok++;        // ok pour x_operation.csv
+
+        char str[20];
+        read(gl, str, sizeof(gl));
+
+        /* Parsing pour les lignes */
+        const char s[2] = "\n";
+        char * token;
+        token = strtok(str, s);
+        token = strtok(NULL, s); //selection 2e ligne
+        while(token != NULL)
+        {
+            int tempNum = 0;
+            char * tempChar = "0";
+            /* Parsing pour les ' , ' */
+            sprintf(token, "CT%d , %s", tempNum, tempChar);
+
+            if(strcmp(tempChar, "R") == 0)
+            {
+                OPout * opXout = (OPout*) malloc(sizeof(OPout));
+                opXout->C->num = tempNum;
+            }
+            else
+            {
+                OPin * opXin = (OPin*) malloc(sizeof(OPin));
+                opXin->C->num = tempNum;
+            }
+
 
             token = strtok(NULL, s);
         }
