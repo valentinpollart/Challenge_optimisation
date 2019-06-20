@@ -328,6 +328,7 @@ int initialisation(int num, Bay* bay)
                 op_head = current_op;
             }
             fgets(str,sizeof(str),op);
+            current_op = current_op->next;
         }
     }
     else
